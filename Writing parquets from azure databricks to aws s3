@@ -1,0 +1,29 @@
+
+Copy code
+import boto3
+import pyarrow.parquet as pq
+
+# Sample data
+data = [("John", 30), ("Alice", 25), ("Bob", 35)]
+df = spark.createDataFrame(data, ["Name", "Age"])
+
+# Write DataFrame to Parquet file in memory
+buffer = df.select("*").toPandas()
+table = pa.Table.from_pandas(buffer)
+parquet_file = "temp.parquet"
+pq.write_table(table, parquet_file)
+
+# Initialize Boto3 S3 client
+s3_client = boto3.client('s3',
+                         aws_access_key_id='your_access_key',
+                         aws_secret_access_key='your_secret_key')
+
+# Upload Parquet file to S3
+bucket_name = 'your_bucket'
+s3_key = 'path/to/parquet_output/'
+s3_client.upload_file(Filename=parquet_file, Bucket=bucket_name, Key=s3_key + parquet_file)
+
+# Remove temporary Parquet file
+os.remove(parquet_file)
+
+print("Parquet file uploaded to S3")
